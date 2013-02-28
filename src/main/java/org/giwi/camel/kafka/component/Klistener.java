@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.giwi.camel.kafka.component;
 
@@ -8,13 +8,12 @@ import kafka.message.Message;
 import kafka.message.MessageAndMetadata;
 
 import org.apache.camel.Exchange;
-import org.giwi.camel.kafka.helpers.BinaryHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author Giwi Softwares
- * 
+ *
  */
 public class Klistener implements Runnable {
 
@@ -33,14 +32,10 @@ public class Klistener implements Runnable {
 			final Exchange exchange = endpoint.createExchange();
 			final byte[] bytes = new byte[message.message().payload().remaining()];
 			message.message().payload().get(bytes);
+			exchange.getIn().setBody(bytes);
 			try {
-				final Object evt = BinaryHelper.getInstance().getObject(bytes);
-				exchange.getIn().setBody(evt);
-				if (LOG.isInfoEnabled()) {
-					LOG.info("Kafka Consumer Message recieved : " + evt);
-				}
 				consumer.getProcessor().process(exchange);
-			} catch (final Exception e) {
+			} catch (Exception e) {
 				exchange.setException(e);
 				LOG.error(e.getMessage(), e);
 			} finally {
@@ -61,7 +56,7 @@ public class Klistener implements Runnable {
 
 	/**
 	 * @param stream
-	 *            the stream to set
+	 *    the stream to set
 	 */
 	public final void setStream(final KafkaStream<Message> stream) {
 		this.stream = stream;
@@ -76,7 +71,7 @@ public class Klistener implements Runnable {
 
 	/**
 	 * @param consumer
-	 *            the consumer to set
+	 *     the consumer to set
 	 */
 	public final void setConsumer(final KafkaConsumer consumer) {
 		this.consumer = consumer;
@@ -91,7 +86,7 @@ public class Klistener implements Runnable {
 
 	/**
 	 * @param endpoint
-	 *            the endpoint to set
+	 *    the endpoint to set
 	 */
 	public final void setEndpoint(final KafkaEndpoint endpoint) {
 		this.endpoint = endpoint;
