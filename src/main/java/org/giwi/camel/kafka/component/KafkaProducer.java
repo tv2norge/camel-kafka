@@ -11,13 +11,15 @@ import kafka.producer.ProducerConfig;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultProducer;
-import org.giwi.camel.kafka.helpers.BinaryHelper;
+import org.apache.camel.TypeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+
 /**
  * @author Giwi Softwares
- * 
+ *
  */
 public class KafkaProducer extends DefaultProducer {
 
@@ -110,26 +112,36 @@ public class KafkaProducer extends DefaultProducer {
 		} else {
 			topicName = endpoint.getTopicName();
 		}
-		final List<Object> evts = exchange.getIn().getBody(List.class);
-		if (evts != null) {
-			final List<ProducerData<String, Message>> datas = new ArrayList<ProducerData<String, Message>>();
-			for (final Object obj : evts) {
-				final ProducerData<String, Message> data = new ProducerData<String, Message>(topicName, new Message(BinaryHelper.getInstance().getBytes(obj)));
-				datas.add(data);
-			}
-			producer.send(datas);
-			if (LOG.isInfoEnabled()) {
-				LOG.info("Kafka Producer multiple send : " + evts);
-			}
-		} else {
-			final Object evt = exchange.getIn().getBody();
-			if (evt != null) {
-				final ProducerData<String, Message> data = new ProducerData<String, Message>(topicName, new Message(BinaryHelper.getInstance().getBytes(evt)));
-				producer.send(data);
-				if (LOG.isInfoEnabled()) {
-					LOG.info("Kafka Producer send : " + evt);
+
+		// Don't just try to getBody(List.class) as TypeConverter's really good at taking non-list
+		// items and turning them into lists.
+		final Object body = exchange.getIn().getBody();
+		if (body != null) {
+			TypeConverter converter = exchange.getContext().getTypeConverter();
+
+			if (body instanceof List) {
+				final List<ProducerData<String, Message>> data = new ArrayList<ProducerData<String, Message>>();
+				for(Object obj: (List)body) {
+					final byte[] bytes = converter.convertTo(byte[].class, exchange, obj);
+					if (bytes != null) {
+						data.add(new ProducerData<String, Message>(topicName, new Message(bytes)));
+					} else {
+						throw new UnsupportedEncodingException("Unable to convert " + obj + " to byte[]");
+					}
 				}
+				producer.send(data);
+			} else {
+				final byte[] bytes = converter.convertTo(byte[].class, exchange, body);
+				if (bytes != null) {
+					producer.send(new ProducerData<String, Message>(topicName, new Message(bytes)));
+				} else {
+					throw new UnsupportedEncodingException("Unable to convert " + body + " to byte[]");
+				}
+			}
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Kafka Producer sent : " + body);
 			}
 		}
 	}
 }
+

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.giwi.camel.kafka.test;
 
@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
 
 /**
  * @author xavier
- * 
+ *
  */
 
 @RunWith(Suite.class)

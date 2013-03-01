@@ -17,7 +17,7 @@ public class KafkaComponent extends DefaultComponent {
 	/**
 	 * header name for the topic
 	 */
-	public static String TOPIC_NAME = "topicNameHeader";
+	public static String TOPIC_NAME = "KafkaTopicNameHeader";
 	private Map<String, Object> parameters;
 
 	public KafkaComponent() {
