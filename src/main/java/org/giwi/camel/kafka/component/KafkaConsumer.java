@@ -1,3 +1,13 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright
+ * ownership. The ASF licenses this file to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the
+ * License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied. See the License for the specific language governing permissions and limitations under the License.
+ */
 package org.giwi.camel.kafka.component;
 
 import java.util.HashMap;
@@ -26,6 +36,7 @@ public class KafkaConsumer extends DefaultConsumer {
 	private final List<KafkaStream<Message>> streams;
 	private final KafkaEndpoint endpoint;
 	private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
+	private final ConsumerConnector connector;
 
 	/**
 	 * @param endpoint
@@ -54,7 +65,7 @@ public class KafkaConsumer extends DefaultConsumer {
 		props.put("mirror.consumer.numthreads", endpoint.getMirrorConsumerNumthreads());
 
 		final ConsumerConfig config = new ConsumerConfig(props);
-		final ConsumerConnector connector = Consumer.createJavaConsumerConnector(config);
+		connector = Consumer.createJavaConsumerConnector(config);
 
 		final Map<String, Integer> topicmap = new HashMap<String, Integer>() {
 			private static final long serialVersionUID = 1L;
@@ -70,6 +81,7 @@ public class KafkaConsumer extends DefaultConsumer {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.apache.camel.impl.DefaultConsumer#doStart()
 	 */
 	@Override
@@ -80,23 +92,29 @@ public class KafkaConsumer extends DefaultConsumer {
 		}
 		executor = endpoint.getCamelContext().getExecutorServiceManager().newFixedThreadPool(this, endpoint.getEndpointUri(), endpoint.getConcurrentConsumers());
 		// consume the messages in the threads
-		for (final KafkaStream<Message> stream : streams) {
-			final Klistener kl = new Klistener();
-			kl.setConsumer(this);
-			kl.setStream(stream);
-			kl.setEndpoint(endpoint);
-			executor.submit(kl);
+		if (!executor.isShutdown()) {
+			for (final KafkaStream<Message> stream : streams) {
+				final Klistener kl = new Klistener();
+				kl.setConsumer(this);
+				kl.setStream(stream);
+				kl.setEndpoint(endpoint);
+				executor.submit(kl);
+			}
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see org.apache.camel.impl.DefaultConsumer#doStop()
 	 */
 	@Override
 	protected void doStop() throws Exception {
 		super.doStop();
-		executor.shutdown();
+		if (connector != null) {
+			connector.commitOffsets();
+			connector.shutdown();
+		}
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Kafka Consumer Component stoped");
 		}
