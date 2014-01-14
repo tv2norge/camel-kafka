@@ -10,35 +10,31 @@
  */
 package org.giwi.camel.kafka.test;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import java.util.Properties;
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServer;
 
 /**
- * @author Giwi Softwares
+ *
+ * @author ars
  */
+public class EmbeddedKafka {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ SingleStringMessageTest.class, MultipleStringMessageTest.class })
-public class AllTests {
-
-    private static EmbeddedZookeeper embeddedZookeeper;
-    private static EmbeddedKafka embeddedKafka;
+    private KafkaServer kafkaServer;
     
-    @BeforeClass
-    public static void setup() {
-        embeddedZookeeper = new EmbeddedZookeeper();
-        embeddedZookeeper.start();
-
-        embeddedKafka = new EmbeddedKafka();
-        embeddedKafka.start();
+    public void start() {
+        Properties props = new Properties();
+        props.put("brokerid", "0");
+        props.put("port", "9092");
+        props.put("zk.connect", "localhost:2181");
+        props.put("log.dir", "target/testKafka");
+        KafkaConfig kafkaConfig = new KafkaConfig(props);
+        kafkaServer = new KafkaServer(kafkaConfig);
+        kafkaServer.startup();
+        
     }
-
-    @AfterClass
-    public static void shutdown() {
-        embeddedKafka.stop();
+    public void stop() {
+        kafkaServer.shutdown();
     }
-
     
 }
