@@ -3,7 +3,7 @@
     
     <groupId>camel-kafka</groupId>
     <artifactId>camel-kafka</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
     
     <name>camel-kafka</name>
     

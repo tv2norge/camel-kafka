@@ -10,13 +10,10 @@
  */
 package org.giwi.camel.kafka.component;
 
-import java.net.URI;
 import java.util.Map;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
-import org.apache.camel.util.URISupport;
 
 /**
  * @author Giwi Softwares
@@ -43,8 +40,7 @@ public class KafkaComponent extends DefaultComponent {
 	 */
 	@Override
 	protected Endpoint createEndpoint(final String addressUri, final String remaining, final Map<String, Object> parameters) throws Exception {
-		final URI endpointUri = URISupport.createRemainingURI(new URI(addressUri), parameters);
-		final Endpoint endpoint = new KafkaEndpoint(addressUri, this, endpointUri);
+		final Endpoint endpoint = new KafkaEndpoint(addressUri, this, remaining);
 		setProperties(endpoint, parameters);
 		setParameters(parameters);
 		return endpoint;

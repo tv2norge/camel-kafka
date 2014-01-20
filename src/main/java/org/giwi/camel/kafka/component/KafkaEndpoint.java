@@ -10,9 +10,6 @@
  */
 package org.giwi.camel.kafka.component;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -64,14 +61,13 @@ public class KafkaEndpoint extends DefaultPollingEndpoint {
 	private String callbackHandlerProps = "";
 
 	/**
-	 * @param uri
-	 *            uri of the component
-	 * @param component
-	 *            THE comonent
+     * @param endpointString
+     * @param topicName
+	 * @param component THE component
 	 */
-	public KafkaEndpoint(final String endPoStringURI, final KafkaComponent component, final URI httpURI) throws URISyntaxException {
-		super(endPoStringURI, component);
-		topicName = httpURI.getHost();
+	public KafkaEndpoint(final String endpointString, final KafkaComponent component, final String topicName) {
+		super(endpointString, component);
+		this.topicName = topicName;
 	}
 
 	/*
@@ -432,8 +428,7 @@ public class KafkaEndpoint extends DefaultPollingEndpoint {
 	}
 
 	/**
-	 * @param reconnectStringerval
-	 *            the reconnectInterval to set
+	 * @param reconnectInterval the reconnectInterval to set
 	 */
 	public void setReconnectInterval(String reconnectInterval) {
 		this.reconnectInterval = reconnectInterval;
